@@ -25,7 +25,7 @@
 namespace netpod {
 namespace V1_0 {
 
-struct config
+struct Config
 {
     int sock_port;                                       // socket port
     int buf_size;                                        // size of ther buffer where received information are stored
@@ -39,15 +39,15 @@ class Server
 {
     public:
         Server();
-        Server(const config & user_config);
+        Server(const Config & user_config);
         void run();
         void stop();
-        Server& set_config(const config & user_config);
+        Server& set_config(const Config & user_config);
         ~Server() = default;
 
     private:
         bool is_continue;
-        config defconfig;
+        Config defconfig;
 };
     
 } // V1_0
