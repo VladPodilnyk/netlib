@@ -22,7 +22,7 @@ class ClientTest : public ::testing::Test
 TEST_F (ServerTest, ServerWrongAdressThrow)
 {
     // Arrange.
-    netpod::V1_0::config config;
+    netpod::V1_0::Config config;
     config.addr = "abra-cadabra";
     netpod::V1_0::Server s(config);
 
