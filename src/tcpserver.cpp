@@ -15,6 +15,8 @@ Server::Server()
 {
     defconfig.sock_port = 3001;          // default configuration
     defconfig.buf_size = 50;
+    defconfig.back_log = 5;
+    defconfig.num_of_threads = 8;
     defconfig.acknowledge_msg = "Hello";
     defconfig.addr = "ANY";              // set "ANY" if you don't care about address
                                          //   which will be binded to the socket
@@ -27,6 +29,8 @@ Server::Server(const Config & user_config)
 {
     defconfig.sock_port = user_config.sock_port;
     defconfig.buf_size = user_config.buf_size;
+    defconfig.back_log = user_config.back_log;
+    defconfig.num_of_threads = user_config.num_of_threads;
     defconfig.acknowledge_msg = user_config.acknowledge_msg;
     defconfig.addr = user_config.addr;
     defconfig.cb = user_config.cb;
@@ -34,11 +38,33 @@ Server::Server(const Config & user_config)
 }
 
 
+void Server::session(SessionData data)
+{
+    std::array<char, buffer_size> buffer;
+    ssize_t bytes_received, bytes_send;
+
+    while ((bytes_received = recv(data.sock, std::begin(buffer), buffer_size - 1, 0)) > 0) {
+        buffer[buffer_size - 1] = '\0';
+        std::cout << "Data received: ";
+        print_data(buffer);
+
+        bytes_send = sendto(data.sock, data.msg.c_str(), 
+                            data.msg.size(), 0,
+                            (struct sockaddr *) &data.client_addr,
+                            data.client_sock_len);
+
+        if (bytes_send < 0)
+            throw FailedToSendData();
+    }
+
+    shutdown(data.sock, SHUT_RDWR);
+    close(data.sock);
+}
+
+
 void Server::run()
 {
-    ssize_t bytes_recived, bytes_send;
     int sock;
-    std::string buffer;
     struct sockaddr_in sock_addr, client_sock_addr;
     int tcp_sock = socket(AF_INET, SOCK_STREAM, 0);
     socklen_t client_sock_len;
@@ -60,35 +86,38 @@ void Server::run()
     if (listen(tcp_sock, defconfig.back_log) < 0)
         throw FailedToMakeListeningSocket();
 
+    ThreadPool *thread_pool = new ThreadPool(defconfig.num_of_threads);
+
     do {
+
         sock = accept(tcp_sock, (struct sockaddr *) &client_sock_addr,
                       &client_sock_len);
+
         if(sock < 0)
             throw FailedToCreateSocket();
+        
+        SessionData data { 
+                            sock,
+                            defconfig.acknowledge_msg,
+                            client_sock_addr,
+                            client_sock_len
+                         };
 
-        while ((bytes_recived = recv(sock, (void*)buffer.c_str(), defconfig.buf_size, 0)) > 0) {
-            printf("Received msg: %li:bytes %s\n", bytes_recived,
-                                                   buffer.c_str());
+        try {
+            thread_pool->push(std::bind(&Server::session, data));
 
-            bytes_send = sendto(sock, defconfig.acknowledge_msg.c_str(), 
-                                sizeof(defconfig.acknowledge_msg), 0,
-                                (struct sockaddr *) &client_sock_addr,
-                                sizeof(client_sock_addr));
-
-            if (bytes_send < 0)
-                throw FailedToSendData();
-
-            printf("Sent acknowledge msg: %li:bytes %s\n", bytes_send,
-                                                           defconfig.acknowledge_msg.c_str());
+        } catch (QueueOverflow e) {
+            defconfig.cb = nullptr;
+            is_continue = false;
         }
 
         if (defconfig.cb) {
-            defconfig.cb (buffer, is_continue);
+            defconfig.cb (is_continue);
         }
 
     } while (is_continue);
 
-    close(sock);
+    delete thread_pool;
     close(tcp_sock);
 }
 
@@ -105,6 +134,15 @@ Server& Server::set_config(const Config & user_config)
     defconfig.addr = user_config.addr;
     defconfig.cb = user_config.cb;
     return *this;
+}
+
+
+void Server::print_data(const std::array<char, buffer_size> & data)
+{
+    for (size_t i = 0; i < data.size(); ++i)
+        std::cout << data[i];
+
+    std::cout << std::endl;   
 }
 
 } // V1_0

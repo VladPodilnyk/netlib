@@ -21,7 +21,7 @@ class NetBaseException : public std::exception
         NetBaseException(const std::string & msg) : error_msg{msg} {};
         const char* what() const throw() override
         {
-            return (const char*)(&error_msg);
+            return error_msg.c_str();
         }
 
     protected:
@@ -77,6 +77,12 @@ class InvalidAddress : public NetBaseException
         InvalidAddress() : NetBaseException("Bad host address is given.") {};
 };
 
+
+class QueueOverflow : public NetBaseException
+{
+    public:
+        QueueOverflow() : NetBaseException("Number of tasks is out of range.") {};
+};
 
 } // netpod
 
