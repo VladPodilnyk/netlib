@@ -21,9 +21,8 @@ include_directories (
 
 add_executable ( 
     net_test EXCLUDE_FROM_ALL
-    ${PROJECT_SOURCE_DIR}/src/tcpserver.cpp
-    ${PROJECT_SOURCE_DIR}/src/tcpclient.cpp
     ${PROJECT_SOURCE_DIR}/tests/tcpserver_test.cpp
+    ${NETLIB_SRC_FILES}
 )
 
 target_link_libraries (

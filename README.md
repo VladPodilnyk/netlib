@@ -20,6 +20,17 @@ $ cmake ..
 $ make
 ```
 
+### Build examples
+
+In build directory perform following commands:
+```
+$ make server
+$ make client
+$ cp ../examples/gen-rqst.sh ./examples
+```
+Copying the script is not neccessary but it was made for 
+your convinience.
+
 ### Run tests
 
 Execute next commands in order to build and run tests.
