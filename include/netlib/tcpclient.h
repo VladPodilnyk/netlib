@@ -27,9 +27,9 @@ namespace V1_0 {
 
 struct ClientSettings
 {
-    int sock_port;         // socket port
-    int buf_size;          // size of ther buffer where received information are stored
-    std::string addr;      // socket address, "LOOPBACK" by default
+    int         sock_port {1};      // socket port
+    int         buf_size  {0};      // size of ther buffer where received information are stored
+    std::string addr;               // socket address, "LOOPBACK" by default
 };
 
 class Client
@@ -37,6 +37,10 @@ class Client
     public:
         Client();
         Client(const ClientSettings & usr_settings);
+        Client(const Client&) = delete;
+        Client(const Client &&) = delete;
+        Client& operator= (const Client &) = delete;
+        Client& operator= (const Client &&) = delete;
         int request(const std::string & data);
         ~Client() = default;
 

@@ -44,9 +44,8 @@ void Server::session(SessionData data)
     ssize_t bytes_received, bytes_send;
 
     while ((bytes_received = recv(data.sock, std::begin(buffer), buffer_size - 1, 0)) > 0) {
-        buffer[buffer_size - 1] = '\0';
         std::cout << "Data received: ";
-        print_data(buffer);
+        print_data(buffer, bytes_received);
 
         bytes_send = sendto(data.sock, data.msg.c_str(), 
                             data.msg.size(), 0,
@@ -86,6 +85,9 @@ void Server::run()
     if (listen(tcp_sock, defconfig.back_log) < 0)
         throw FailedToMakeListeningSocket();
 
+    memset(&client_sock_addr, 0, sizeof(struct sockaddr_in));
+    client_sock_len = sizeof(struct sockaddr_in);
+
     ThreadPool *thread_pool = new ThreadPool(defconfig.num_of_threads);
 
     do {
@@ -121,10 +123,6 @@ void Server::run()
     close(tcp_sock);
 }
 
-void Server::stop()
-{
-    is_continue = false;
-}
 
 Server& Server::set_config(const Config & user_config)
 {
@@ -133,13 +131,14 @@ Server& Server::set_config(const Config & user_config)
     defconfig.acknowledge_msg = user_config.acknowledge_msg;
     defconfig.addr = user_config.addr;
     defconfig.cb = user_config.cb;
+    is_continue = false;
     return *this;
 }
 
 
-void Server::print_data(const std::array<char, buffer_size> & data)
+void Server::print_data(const std::array<char, buffer_size> & data, size_t bytes_received)
 {
-    for (size_t i = 0; i < data.size(); ++i)
+    for (size_t i = 0; i < bytes_received; ++i)
         std::cout << data[i];
 
     std::cout << std::endl;   
