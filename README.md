@@ -1,5 +1,10 @@
 # C++ library for networking
 
+
+[![build status](https://gitlab.com/VladPodilnyk/netlib/badges/net/pipeline.svg)](https://gitlab.com/VladPodilnyk/netlib/commits/net)
+[![coverage report](https://gitlab.com/VladPodilnyk/netlib/badges/net/coverage.svg)](https://gitlab.com/VladPodilnyk/netlib/commits/net)
+
+
 The library provides classes for network programming.
 
 ## Getting Started
