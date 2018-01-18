@@ -2,6 +2,7 @@ include (ExternalProject)
 ExternalProject_Add (
     googletest
     GIT_REPOSITORY "https://github.com/google/googletest.git"
+    GIT_TAG "release-1.8.0"
     UPDATE_COMMAND cd ${PROJECT_BINARY_DIR}/googletest && mv googletest gtest && mv gtest/googletest .
     CMAKE_ARGS "-DCMAKE_BUILD_TYPE=Release"
     SOURCE_DIR "${PROJECT_BINARY_DIR}/googletest/googletest"
